@@ -3,6 +3,7 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
+extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -14,7 +15,7 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
 myTable:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
+	db	' ','e','l','l','o',' ','W','o','r','l','d','!',0x0a
 					; message, plus carriage return
 	myTable_l   EQU	13	; length of data
 	align	2
@@ -41,6 +42,9 @@ start: 	lfsr	0, myArray	; Load FSR0 with address in RAM
 	movwf	TBLPTRL, A		; load low byte to TBLPTRL
 	movlw	myTable_l	; bytes to read
 	movwf 	counter, A		; our counter register
+	
+	;call	multiply_24
+
 loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter, A		; count down to zero
@@ -57,10 +61,13 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 measure_loop:
 	call	ADC_Read
-	movf	ADRESH, W, A
+	;movf	ADRESH, W, A
+	call	decimal
+	movf	0x00, W, A
 	call	LCD_Write_Hex
-	movf	ADRESL, W, A
+	movf	0x01, W, A
 	call	LCD_Write_Hex
+
 	goto	measure_loop		; goto current line in code
 	
 	; a delay subroutine if you need one, times around loop in delay_count

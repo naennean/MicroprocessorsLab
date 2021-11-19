@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  multiply, multiply_24
+global  multiply, multiply_24, decimal
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -22,11 +22,11 @@ RES3:		ds 1
 psect	mult_code,class=CODE
 
 multiply:
-	movlw	0x0d        
-	movwf	ARG1L
-	movwf	ARG2L
-	movwf	ARG1H
-	movwf	ARG2H
+	        
+	;movwf	ARG1L
+	;movwf	ARG2L
+	;movwf	ARG1H
+	;movwf	ARG2H
 	
     
 	MOVF ARG1L, W
@@ -61,21 +61,23 @@ multiply:
 	CLRF WREG ;
 	ADDWFC RES3, F ;
 	
-	movff	RES0,0x00   ;Store results in registers
-	movff	RES1,0x01
-	movff	RES2,0x02
-	movff	RES3,0x03
+	movff	RES0,0x10   ;Store results in registers
+	movff	RES1,0x11
+	movff	RES2,0x12
+	movff	RES3,0x13
 	return
 	
 multiply_24:
-	movlw	0x0e        
-	movwf	ARG1L
+	;movlw	0xAB        
+	;movwf	ARG1L
+	;movlw	0xCD  
+	;movwf	ARG1H
+	;movlw	0xEF
+	;movwf	ARG1T
 	
-	movwf	ARG1H
-	movwf	ARG1T
-	movwf	ARG2L
+	;movlw	0xDD
+	;movwf	ARG2L
 	
-    
 	MOVF	ARG1L, W
 	MULWF	ARG2L	    ; ARG1L * ARG2L->
 			    ; PRODH:PRODL
@@ -100,9 +102,63 @@ multiply_24:
 			    ;
 
 	
-	movff	RES0,0x00   ;Store results in registers
-	movff	RES1,0x01
-	movff	RES2,0x02
-	movff	RES3,0x03
+	movff	RES0,0x20   ;Store results in registers
+	movff	RES1,0x21
+	movff	RES2,0x22
+	movff	RES3,0x23
+	
 	return
+
+decimal:  
+	;movlw	0x04
+	;movwf	ADRESH
+	
+	;movlw	0xD2
+	;movwf	ADRESL
+	
+	movff	ADRESH, ARG1H	; Extract first bit
+	movff	ADRESL, ARG1L
+	
+	movlw	0x41		; Multiply by our number k= 0x418A
+	movwf	ARG2H
+	movlw	0x8A
+	movwf	ARG2L
+	call	multiply 
+	movff	RES3,0x00
+	rlncf	0x00, F		  ; left shift 4 bits
+	rlncf	0x00, F
+	rlncf	0x00, F
+	rlncf	0x00, F
+
+	call	extract_next	; Extract next bit, combine it with first bit
+	movf	RES3,W
+	addwf	0x00,1
+	
+	call	extract_next	; Extract next bit
+	movff	RES3, 0x01
+	rlncf	0x01, F		; left shift 4 bits
+	rlncf	0x01, F
+	rlncf	0x01, F
+	rlncf	0x01, F
+
+	call	extract_next	; Extract next it, combine it with previous bit
+	movf	RES3,W
+	addwf	0x01,1
+	
+	return
+	
+	
+
+extract_next:
+	movff	RES0, ARG1L ;Store results in registers for multiplication
+	movff	RES1, ARG1H
+	movff	RES2, ARG1T
+	
+	movlw	0x0A
+	movwf	ARG2L
+	
+	call	multiply_24 ; multiplies remainder with dec10
+	
+	return
+    
 end

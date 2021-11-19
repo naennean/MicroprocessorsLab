@@ -53,7 +53,8 @@ LCD_Write_Hex:			; Writes byte stored in W as hex
 	movwf	LCD_hex_tmp, A
 	swapf	LCD_hex_tmp, W, A	; high nibble first
 	call	LCD_Hex_Nib
-	movf	LCD_hex_tmp, W, A	; then low nibble
+	movf	LCD_hex_tmp, W, A
+	; then low nibble
 LCD_Hex_Nib:			; writes low nibble as hex character
 	andlw	0x0F
 	movwf	LCD_tmp, A
