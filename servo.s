@@ -8,31 +8,49 @@ DELAY_L:		ds 1	; low 8 bits for delay
 
 psect	misc_code, class=CODE
     
-global Delay_set,delay,pulse,shortpulse,longpulse
-extrn  delay
+global pulse,shortpulse,longpulse
+extrn  delay, DelayH_set, DelayL_set
     
     
 pulse:
     movlw 0xff
     movwf PORTE
-    call shortpulse
-    movlw 0x00
-    movwf PORTE
     call longpulse
     
-    goto pulse
+   ; call shortpulse
+    movlw 0x00
+    movwf PORTE
+    ;call shortpulse
+    call longpulse
+    return
+
     
 shortpulse:
-    movlw high(0x08d0)
-    movwf DELAY_H, A
-    movlw low(0x08d0) 
-    movwf DELAY_L, A
+    movlw high(0x07cb)
+    call DelayH_set
+    movlw low(0x07cb) 
+    call DelayL_set
     call delay
+    call delay
+    return
     
 longpulse:
+    call calclongdelay
     movlw high(0x9c3f)
-    movwf DELAY_H, A
+    call DelayH_set
     movlw low(0x9c3f) 
-    movwf DELAY_L, A
+    call DelayL_set
     call delay
+    call delay
+    return
+
+calclongdelay:
+
+    movlw high(0x9c3f)
+    call DelayH_set
+    movlw low(0x9c3f) 
+    call DelayL_set
+    movlw 0x07cb
+    subwf DELAY_H, 0
+    
     
