@@ -6,7 +6,7 @@ DELAY_L:		ds 1	; low 8 bits for delay
 
 psect	misc_code, class=CODE
     
-global Delay_set,delay, DelayH_set, DelayL_set, dac_int,dac_setup
+global Delay_set,delay, DelayH_set, DelayL_set, longpulse1,longpulsesetup,shortpulse1,outputcheck
 ;1ms=7d0
 ;20ms=9c3f
 Delay_set:
@@ -36,38 +36,48 @@ Dloop:	decf 0x11, f, A ; counter decrement
 	bc Dloop
 	return   
 		
-dac_int:
-    
-    btfss TMR0IF
-    retfie f
-    incf LATJ,F,A
-    bcf  TMR0IF	 
-    movlw 0x9f
-    movwf TMR0H, A
-    movlw 0x0f
-    movwf TMR0L, A
-    
-    retfie f
-    
-    
-    ;movlw high(0xff)
-    ;movwf TMR0H
 
-    
-dac_setup:
-    clrf  TRISJ,A
+
+longpulsesetup:
+    clrf  TRISJ,A   ;sets as output
     clrf  LATJ,A
 
-    movlw 0x00
-    movwf TMR0H, A
-    movlw 0x0f
-    movwf TMR0L, A
-    
     movlw 10000001B
     movwf T0CON,A   ; approx 1sec rollover
-    
     
     bsf TMR0IE	    ; Enable timer0 interrupts
     bsf GIE	    ;Enable all interrupts
     return
- 
+    
+outputcheck:
+    btfss TMR0IF ;bit test f,skip if set  
+    retfie f    ;return if not interrupt 
+    btfss PORTJ,0
+    bra shortpulse1
+    bra longpulse1
+    
+longpulse1:
+    
+  
+    incf LATJ,F,A  ;increments latj 
+    movlw 0x62  ;timer length settings 628E
+    movwf TMR0H, A
+    movlw 0x8E
+    movwf TMR0L, A
+    bcf TMR0IF
+    retfie f
+    
+   
+    
+shortpulse1:
+   
+    incf LATJ,F,A  ;increments latj 
+    movlw 0x99  ;timer length settings 628E
+    movwf TMR0H, A
+    movlw 0x94
+    movwf TMR0L, A
+    bcf TMR0IF
+    retfie f
+    
+
+

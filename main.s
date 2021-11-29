@@ -5,7 +5,8 @@ extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 extrn   Delay_set,delay,pulse
-extrn   dac_int, dac_setup
+
+extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -24,11 +25,12 @@ rst:
     
 int:
     org 0x0008
-    goto dac_int
+    
+    goto outputcheck
     
 start:
 
-    call dac_setup
+    call longpulsesetup
     goto $
     
     end rst
