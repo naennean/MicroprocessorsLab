@@ -6,7 +6,7 @@ extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 extrn   Delay_set,delay,pulse
 
-extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck
+extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck, pwm_setup
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -20,6 +20,7 @@ delay_count:ds 1    ; reserve one byte for counter in the delay routine
 psect	code, abs
 rst:
     org 0x0000
+    call pwm_setup
     goto start
     
     
