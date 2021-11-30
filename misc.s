@@ -30,14 +30,14 @@ DelayH_set:
 	return
 
 delay:			; General 16 bit Delay function
-	movf DELAY_H, W
-	movwf 0x10,A
-	movf DELAY_L, W
-	movwf 0x11,A
+	;movf DELAY_H, W
+	;movwf 0x10,A
+	;movf DELAY_L, W
+	;movwf 0x11,A
 	movlw 0x00 ; W = 0
 	
-Dloop:	decf 0x11, f, A ; counter decrement
-	subwfb 0x10, f, A
+Dloop:	decf DELAY_L, f, A ; counter decrement
+	subwfb DELAY_H, f, A
 	bc Dloop
 	return   
 		
