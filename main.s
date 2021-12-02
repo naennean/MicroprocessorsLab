@@ -6,7 +6,7 @@ extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 extrn   Delay_set,delay,pulse
 
-extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck, pwm_setup, ultra_main
+extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck, pwm_main, ultra_main
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -34,7 +34,7 @@ int:
     goto outputcheck
     
 start:
-
+    call pwm_main
     call longpulsesetup
     goto $
     

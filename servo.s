@@ -12,7 +12,7 @@ global pulse,shortpulse,longpulse
 extrn  delay, DelayH_set, DelayL_set
     
     
-pulse:
+servo_main:
     movlw 0xff
     movwf PORTE
     call longpulse
