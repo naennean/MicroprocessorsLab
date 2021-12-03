@@ -18,9 +18,9 @@ ultra_main:
     call ultra_init
 ultra_start:
     call ultra_pulse
-    ;call ultra_receive 
+    call ultra_receive 
 
-    call step_delay
+    ;call step_delay
     goto ultra_start
     
 ultra_init:		; CCP
@@ -43,7 +43,7 @@ ultra_receive:		; This aims to receive the return echo pulse
     movlw   0xff	; Configure PORTE direction register as input
     movwf   TRISE, A
     call    meas_pulse_len
-    ;call    pulse_delay ; Delay for 5 us
+    call    pulse_delay ; Delay for 5 us
     return
 
 ultra_count:
@@ -103,20 +103,20 @@ extract_count: ; branch and echo final counter value to another PORT
 
 	return
 distance_conversion:
-    movlw 0xff
-    mulwf LENH
-    movf PRODL,W
-    addwf LENL, 1
-    movf PRODH,W
+    ;movlw 0xff
+    ;mulwf LENH
+    ;movf PRODL,W
+    ;addwf LENL, 1
+    ;movf PRODH,W
     
     
-    movf PRODL, W   ; 16 bit adder
-    addwf TIME_L, 1
-    movf  PRODH, W
-    addwfc TIME_H, 1
+   ; movf PRODL, W   ; 16 bit adder
+    ;addwf TIME_L, 1
+    ;movf  PRODH, W
+   ; addwfc TIME_H, 1
     
-    movff TIME_H, TMR0H ; Update interrupt timer control registers
-    movff TIME_L, TMR0L
+    ;movff TIME_H, TMR0H ; Update interrupt timer control registers
+   ; movff TIME_L, TMR0L
    
     
     
