@@ -8,7 +8,7 @@ DELAY_L:		ds 1	; low 8 bits for delay
 
 psect	misc_code, class=CODE
     
-global pulse,shortpulse,longpulse
+global shortpulse,longpulse
 extrn  delay, DelayH_set, DelayL_set
     
     

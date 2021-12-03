@@ -4,9 +4,9 @@ extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
-extrn   Delay_set,delay,pulse
+extrn   Delay_set,delay
 
-extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck, pwm_main, ultra_main
+extrn   longpulse1,longpulsesetup,shortpulse1,outputcheck, pwm_main, ultra_main, ccp_main
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -21,7 +21,8 @@ psect	code, abs
 	
 rst:
     org 0x0000
-    call pwm_setup
+    ;call ccp_main
+    ;call pwm_setup
     call ultra_main
     
     goto start

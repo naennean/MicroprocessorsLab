@@ -11,7 +11,7 @@ TIME_L:			ds 1	; low 8 bits for time change
 psect	misc_code, class=CODE
     
 global Delay_set,delay, DelayH_set, DelayL_set, longpulse1,longpulsesetup,shortpulse1,outputcheck
-global pwm_setup
+global pwm_setup, pwm_main
 ;1ms=7d0
 ;20ms=9c3f
 Delay_set:
