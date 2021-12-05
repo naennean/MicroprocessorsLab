@@ -5,17 +5,14 @@ DELAY_H:		ds 1    ; high 8 bits for delay
 DELAY_L:		ds 1	; low 8 bits for delay
 LENH:			ds 1
 LENL:			ds 1
-US_reading:		ds 1
 
 psect	misc_code, class=CODE 
-global ultra_main, ccp_main, ultraread,writeval
+global ultra_main
 
-ccp_main:
-    ;call ccp
-    goto ccp_main
-    
+
 ultra_main:
     call ultra_init
+    
 ultra_start:
     call ultra_pulse
     call ultra_receive 
@@ -23,10 +20,14 @@ ultra_start:
     ;call step_delay
     goto ultra_start
     
-ultra_init:		; CCP
+ultra_init:		; Initialises Echo ports
+    movlw 0x00
+    movwf TRISH
+    movwf TRISJ
+	
     return
     
-ultra_pulse:		; This pulse to RE0 triggers the ultrasonic sensor
+ultra_pulse:		; This triggers the ultrasonic sensor
     movlw   0x00	; Configure PORTE direction register as output
     movwf   TRISE, A	 
     
@@ -46,8 +47,7 @@ ultra_receive:		; This aims to receive the return echo pulse
     call    pulse_delay ; Delay for 5 us
     return
 
-ultra_count:
-    return
+
  
 pulse_delay:			; 5 us delay for the ultrasound
 	movlw 0x00		; Configure the delay for the ultrasound pulse
@@ -78,23 +78,20 @@ Dloop:	decf DELAY_L, f, A	; Delay loop for 16 bit counter decrement
 	bc Dloop		; branch if carry in high bits
 	return			; otherwise return, decrement finished
 
-meas_pulse_len:
-	movlw 0x00		; sets our counter to be 0
+meas_pulse_len:		; Counts for how long the return pulse is on for
+	movlw 0x00		; sets our counter to be 0 initially
 	movwf LENH, A
 	movwf LENL, A
 pulse_count:	
 	call step_delay
-	btfss PORTE, 0
-	goto extract_count  ; is low
+	btfss PORTE, 0	    
+	goto extract_count  ; PORT is low, break
 	incf LENL, f, A	    ; is high, increment counter, call step delay again
 	btfsc STATUS, 0	    ; test carry bit, add to LENH
 	incf LENH, f, A
 	bra pulse_count
 
-extract_count: ; branch and echo final counter value to another PORT
-	movlw 0x00
-	movwf TRISH
-	movwf TRISJ
+extract_count:	    ; branch and echo final counter value to another PORT
     	movff LENH, 0x40, A
 	movff LENL, 0x41, A
 	
@@ -102,63 +99,8 @@ extract_count: ; branch and echo final counter value to another PORT
 	movff LENL, PORTJ
 
 	return
-distance_conversion:
-    ;movlw 0xff
-    ;mulwf LENH
-    ;movf PRODL,W
-    ;addwf LENL, 1
-    ;movf PRODH,W
-    
-    
-   ; movf PRODL, W   ; 16 bit adder
-    ;addwf TIME_L, 1
-    ;movf  PRODH, W
-   ; addwfc TIME_H, 1
-    
-    ;movff TIME_H, TMR0H ; Update interrupt timer control registers
-   ; movff TIME_L, TMR0L
-   
-    
-    
-    
-;ccp:
-	
-   ; movlw 0b00000100   
-    ;movwf CCP1CON, A	    ;Capture Mode, every falling edge on RC2
-   ; movlw 0x00
-    ;movwf CCPTMRS0	    ; 
-    
-   ; movlw 00110001B
-   ; movwf T1CON,A   
-    
-   ; movlw 0x00		    ; Update interrupt timer control registers
-   ; movwf CCPR1L 
-   ; movwf CCPR1H
-    
-    ;BSF STATUS,RP0	    ;Bank 1
-  ;  BSF TRISC,2		    ;Make RC2 input
-   ; CLRF TRISD		    ;Make PORTD output
-  
-   ; bsf TMR0IE	    ; Enable timer0 interrupts
-;ccp1:
-   ; BTFSS CCP1IF
-   ; GOTO ccp1
-   ; MOVF CCPR1L,W
-   ; MOVWF PORTD, A
-    
-ultraread:
-    movlw 0xff
-    movlw PORTE
-    movlw 0x00
-    movwf PORTH
-    ;movf TRISE,US_reading
-    movlw 0x00
-    cpfseq US_reading
-    call writeval
-writeval:
-    ;movf PORTE,PORTD
-    
-    return 
+
+
     
     
     
