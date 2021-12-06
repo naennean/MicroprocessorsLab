@@ -11,11 +11,12 @@ TIME_L:			ds 1	; low 8 bits for time change
 psect	misc_code, class=CODE
     
 global pwm_setup, pwm_main
+global Delay_set, DelayL_set, DelayH_set, delay
 
 Delay_set:
-	movlw high(0x7d0)
+	movlw 0xFF
 	movwf DELAY_H, A
-	movlw low(0x07d0)
+	movlw 0xFF
 	movwf DELAY_L, A
 	return
 	
@@ -74,8 +75,8 @@ outputcheck:
     retfie f	    ;return if not interrupt 
    
     btfss PORTJ, 0
-    bra high
-    bra low
+    bra high_pulse
+    bra low_pulse
     
     
 pulselength:		; calculates counter * increment
@@ -84,7 +85,7 @@ pulselength:		; calculates counter * increment
     mulwf Increment	; multiply, result in PRODH:PRODL
     return 
     
-low:
+low_pulse:
     ; Generates LOW part of pulse wave, with fixed 50 Hz duty cycle
     incf LATJ,F,A	; increments latj 
     movlw 0x66		
@@ -103,7 +104,7 @@ low:
     bcf TMR0IF
     retfie f
     
-high:
+high_pulse:
     ; Generates HIGH part of pulse wave, with fixed 50 Hz duty cycle
     ; Reconfigures interrupt pulse length
     

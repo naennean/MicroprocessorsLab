@@ -8,17 +8,19 @@ LENL:			ds 1
 
 psect	misc_code, class=CODE 
 global ultra_main
-
+extrn decimal 
+global LENH,LENL
 
 ultra_main:
     call ultra_init
     
 ultra_start:
-    call ultra_pulse
+    call ultra_pulse	; Send outgoing signal
+    
     call ultra_receive 
-
+    call ultra_convert
     ;call step_delay
-    goto ultra_start
+    return
     
 ultra_init:		; Initialises Echo ports
     movlw 0x00
@@ -33,8 +35,9 @@ ultra_pulse:		; This triggers the ultrasonic sensor
     
     movlw   0x01	; Set RE0 high
     movwf   LATE, A
-    ;call    pulse_delay	; Delay for 5 us
-    call    step_delay
+    ;call    wait_delay
+    call    pulse_delay	; Delay for 5 us
+
     movlw   0x00	; Set RE0 low
     movwf   LATE, A
 
@@ -43,6 +46,7 @@ ultra_pulse:		; This triggers the ultrasonic sensor
 ultra_receive:		; This aims to receive the return echo pulse
     movlw   0xff	; Configure PORTE direction register as input
     movwf   TRISE, A
+    call    wait_delay	; Fixed 750us holdoff
     call    meas_pulse_len
     call    pulse_delay ; Delay for 5 us
     return
@@ -58,9 +62,9 @@ pulse_delay:			; 5 us delay for the ultrasound
 	bra Dloop
 	
 wait_delay:
-	movlw 0x01		; Configure the delay for the waiting pulse
+	movlw 0x0B		; Configure the delay for the waiting pulse
 	movwf DELAY_H, A
-	movlw 0x00
+	movlw 0xAA
 	movwf DELAY_L, A
 	movlw 0x00 ; W = 0
 	bra Dloop
@@ -68,7 +72,7 @@ wait_delay:
 step_delay:
 	movlw 0x00		; Configure the delay for the waiting pulse
 	movwf DELAY_H, A
-	movlw 0x60
+	movlw 0x10		; CHANGE NUMBER HERE TO CONFIG CALIBRATION
 	movwf DELAY_L, A
 	movlw 0x00 ; W = 0
 	bra Dloop
@@ -100,6 +104,15 @@ extract_count:	    ; branch and echo final counter value to another PORT
 
 	return
 
+ultra_convert:
+    ; converts LENH:LENL into a 4 digits for display use to the LCD
+    ;movff LENH, 0x50, A
+    ;movff LENL, 0x51, A
+    call decimal 
+    ; 
+    return 
+
+	
 
     
     

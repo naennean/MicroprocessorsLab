@@ -1,22 +1,25 @@
 #include <xc.inc>
 
 global  multiply, multiply_24, decimal
+extrn LENH,LENL
+global ANSH, ANSL
+
 
 psect	udata_acs   ; named variables in access ram
-LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
-LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
-LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
-LCD_tmp:	ds 1	; reserve 1 byte for temporary use
-LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
+
 ARG1L:		ds 1	
 ARG2L:		ds 1
 ARG1H:		ds 1
 ARG1T:		ds 1
 ARG2H:		ds 1
+    
 RES0:		ds 1
 RES1:		ds 1
 RES2:		ds 1
 RES3:		ds 1
+    
+ANSH:		ds 1	 ; answer for the conversion
+ANSL:		ds 1
 
 
 psect	mult_code,class=CODE
@@ -102,48 +105,54 @@ multiply_24:
 			    ;
 
 	
-	movff	RES0,0x20   ;Store results in registers
-	movff	RES1,0x21
-	movff	RES2,0x22
-	movff	RES3,0x23
+	;movff	RES0,0x20   ;Store results in registers
+	;movff	RES1,0x21
+	;movff	RES2,0x22
+	;movff	RES3,0x23
 	
 	return
 
 decimal:  
-	;movlw	0x04
-	;movwf	ADRESH
+	; Converts 16 bit Hex number to a number in decimal based on
+	; a configurable conversion factor
+	; Hex input is in LENH:LENL
+	; Number in k can be configured
+	; The output is a 16 bit hex number where its digits is a decimal
 	
-	;movlw	0xD2
-	;movwf	ADRESL
+	;movlw	0x07
+	;movwf	LENH
+	;movlw	0xD0
+	;movwf	LENL
 	
-	movff	ADRESH, ARG1H	; Extract first bit
-	movff	ADRESL, ARG1L
+	movff	LENH, ARG1H	; Extract first bit
+	movff	LENL, ARG1L
 	
-	movlw	0x41		; Multiply by our number k= 0x418A
+	movlw	0x00		; Multiply by our number k= 0x0300
 	movwf	ARG2H
-	movlw	0x8A
-	movwf	ARG2L
+	movlw	0x30
+	
+	movwf	ARG2L		; Following is the conversion routine
 	call	multiply 
-	movff	RES3,0x00
-	rlncf	0x00, F		  ; left shift 4 bits
-	rlncf	0x00, F
-	rlncf	0x00, F
-	rlncf	0x00, F
+	movff	RES3,ANSH
+	rlncf	ANSH, F		; left shift 4 bits
+	rlncf	ANSH, F
+	rlncf	ANSH, F
+	rlncf	ANSH, F
 
 	call	extract_next	; Extract next bit, combine it with first bit
 	movf	RES3,W
 	addwf	0x00,1
 	
 	call	extract_next	; Extract next bit
-	movff	RES3, 0x01
-	rlncf	0x01, F		; left shift 4 bits
-	rlncf	0x01, F
-	rlncf	0x01, F
-	rlncf	0x01, F
+	movff	RES3, ANSL
+	rlncf	ANSL, F		; left shift 4 bits
+	rlncf	ANSL, F
+	rlncf	ANSL, F
+	rlncf	ANSL, F
 
-	call	extract_next	; Extract next it, combine it with previous bit
+	call	extract_next	; Extract next bit, combine it with previous bit
 	movf	RES3,W
-	addwf	0x01,1
+	addwf	ANSL,1
 	
 	return
 	
