@@ -120,20 +120,21 @@ decimal:
 	; The output is a 16 bit hex number where its digits is a decimal
 	
 	;movlw	0x07
-	;movwf	LENH
-	;movlw	0xD0
-	;movwf	LENL
+	;movwf	LENH, A
+	;movlw	0x58
+	;movwf	LENL, A
+    
 	
 	movff	LENH, ARG1H	; Extract first bit
 	movff	LENL, ARG1L
 	
-	movlw	0x00		; Multiply by our number k= 0x0300
+	movlw	0x05		; Multiply by our number k
 	movwf	ARG2H
-	movlw	0x30
+	movlw	0xc5
+	movwf	ARG2L		
 	
-	movwf	ARG2L		; Following is the conversion routine
-	call	multiply 
-	movff	RES3,ANSH
+	call	multiply	; Following is the conversion routine
+	movff	RES3, ANSH
 	rlncf	ANSH, F		; left shift 4 bits
 	rlncf	ANSH, F
 	rlncf	ANSH, F
@@ -141,7 +142,7 @@ decimal:
 
 	call	extract_next	; Extract next bit, combine it with first bit
 	movf	RES3,W
-	addwf	0x00,1
+	addwf	ANSH,1
 	
 	call	extract_next	; Extract next bit
 	movff	RES3, ANSL
@@ -153,6 +154,10 @@ decimal:
 	call	extract_next	; Extract next bit, combine it with previous bit
 	movf	RES3,W
 	addwf	ANSL,1
+	
+	movff	ANSH, 0x60
+	movff	ANSL, 0x61
+	
 	
 	return
 	

@@ -13,7 +13,7 @@ global LENH,LENL
 
 ultra_main:
     call ultra_init
-    
+
 ultra_start:
     call ultra_pulse	; Send outgoing signal
     
@@ -21,7 +21,7 @@ ultra_start:
     call ultra_convert
     ;call step_delay
     return
-    
+ 
 ultra_init:		; Initialises Echo ports
     movlw 0x00
     movwf TRISH
@@ -72,7 +72,7 @@ wait_delay:
 step_delay:
 	movlw 0x00		; Configure the delay for the waiting pulse
 	movwf DELAY_H, A
-	movlw 0x10		; CHANGE NUMBER HERE TO CONFIG CALIBRATION
+	movlw 0x00		; CHANGE NUMBER HERE TO CONFIG CALIBRATION
 	movwf DELAY_L, A
 	movlw 0x00 ; W = 0
 	bra Dloop
@@ -86,8 +86,11 @@ meas_pulse_len:		; Counts for how long the return pulse is on for
 	movlw 0x00		; sets our counter to be 0 initially
 	movwf LENH, A
 	movwf LENL, A
+check_start:
+	btfss PORTE, 0
+	goto check_start
 pulse_count:	
-	call step_delay
+	;call step_delay
 	btfss PORTE, 0	    
 	goto extract_count  ; PORT is low, break
 	incf LENL, f, A	    ; is high, increment counter, call step delay again
@@ -96,11 +99,11 @@ pulse_count:
 	bra pulse_count
 
 extract_count:	    ; branch and echo final counter value to another PORT
-    	movff LENH, 0x40, A
-	movff LENL, 0x41, A
+    	;movff LENH, 0x40, A
+	;movff LENL, 0x41, A
 	
-	movff LENH, PORTH
-	movff LENL, PORTJ
+	;movff LENH, PORTH
+	;movff LENL, PORTJ
 
 	return
 
@@ -109,7 +112,6 @@ ultra_convert:
     ;movff LENH, 0x50, A
     ;movff LENL, 0x51, A
     call decimal 
-    ; 
     return 
 
 	

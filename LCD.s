@@ -153,7 +153,8 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 	
 LCD_clear:
-	movlw	00000001B	;clears lcd
+	call	LCD_delay_ms
+	movlw	00000001B	; clears lcd
 	call	LCD_Send_Byte_I
 	
 	return

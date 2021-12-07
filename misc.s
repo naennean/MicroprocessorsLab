@@ -29,6 +29,7 @@ DelayH_set:
 	return
 
 delay:			; General 16 bit Delay function
+	call Delay_set
 	movlw 0x00 ; W = 0
 	
 Dloop:	decf DELAY_L, f, A ; counter decrement
