@@ -6,10 +6,12 @@ DELAY_L:		ds 1	; low 8 bits for delay
 LENH:			ds 1
 LENL:			ds 1
 
-psect	misc_code, class=CODE 
+psect	ultra_code, class=CODE 
 global ultra_main
-extrn decimal 
 global LENH,LENL
+
+extrn decimal 
+
 
 ultra_main:
     call ultra_init
@@ -23,9 +25,9 @@ ultra_start:
     return
  
 ultra_init:		; Initialises Echo ports
-    movlw 0x00
-    movwf TRISH
-    movwf TRISJ
+    ;movlw 0x00
+    ;movwf TRISH
+    ;movwf TRISJ
 	
     return
     
