@@ -14,12 +14,10 @@ extrn pwm_counter
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+
+psect	udata_bank4 ; Reserve data in RAM
+msg:	ds 0x3	    ; 16 byte message
     
-;org 0x00
- 
-;setup:
-    ;movlw 0x00 
-    ;movwf TRISE
 psect	code, abs
 	
 rst:
@@ -34,18 +32,23 @@ int:
 start:
     call    setup
     call    pwm_setup
+    call    ADC_Setup
 
 loop:
-    call    ultra_main
+    call    ultra_main	    ;Send and receive ultrasound signal
     
-    movf    ANSH, W, A	; Writes converted number to LCD
+    movf    ANSH, W, A	    ; Writes converted distance reading to LCD
     call    LCD_Write_Hex
     movf    ANSL, W, A
     call    LCD_Write_Hex
     call    LCD_clear
-
+    
+    ; code to modify pwm_counter should be here
+    ; for example use joystick
+    
     incf    pwm_counter, 1, 0	; Increment counter variable 
     
+    call    send_message
     goto loop
 
     
@@ -53,10 +56,21 @@ setup:
     bcf		CFGS	; point to Flash program memory  
     bsf		EEPGD 	; access Flash program memory
     call	UART_Setup	; setup UART
-    call	LCD_Setup	; setup UART
+    call	LCD_Setup	; setup LCD
     
     return
     
 
+send_message:		; Output message to UART
+    lfsr    0, msg 
+    movff   ANSH, POSTINC0
+    movff   ANSL, POSTINC0
+    movff   pwm_counter, POSTINC0
+
+    
+    movlw   0x3		; Load message length into W
+    lfsr    2, msg	; UART reads from FSR2	    
+    call    UART_Transmit_Message
+    return
     
 end rst

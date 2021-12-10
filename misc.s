@@ -38,7 +38,7 @@ Dloop:	decf DELAY_L, f, A ; counter decrement
 	bc Dloop
 	return   
 		
-; The main PWM generator is below
+; ****************The main PWM generator is below************************
 
 pwm_main:
     ; Generates a variable PWM cycle for the operation of a servo motor
@@ -61,10 +61,14 @@ pwm_setup:	    ; initialises variables for looping, output and the interrupts
     ;clrf    LATJ
     movlw   0x00
     movwf   TRISJ
+    ;movlw   0x00
+    ;movwf   TRISH
     
-    movlw   0xff
-    movwf   LATJ
-    movwf   PORTJ
+    ;movlw   0xff
+    ;movwf   LATJ
+    ;movwf   PORTJ
+   ; movwf   LATH
+    ;movwf   PORTH
     movlw   10000010B ; Configure length of timer0
     movwf   T0CON,A   
     bsf	    TMR0IE	    ; Enable timer0 interrupts
