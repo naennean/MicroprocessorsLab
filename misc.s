@@ -54,7 +54,7 @@ pwm_main:
 pwm_setup:	    ; initialises variables for looping, output and the interrupts
     movlw 0x00	    
     movwf   pwm_counter, A
-    movlw   0x0f	    
+    movlw   0x0E	    
     movwf   Increment, A
 
     ;clrf    TRISJ  ; sets PORTD as output
@@ -97,9 +97,9 @@ low_pulse:
     ; Generates LOW part of pulse wave, with fixed 50 Hz duty cycle
     incf    LATJ,  F,A	; increments LAT Register
     ;btg	    LATD, 0, A	; Output by toggling LAT Register
-    movlw   0x66		
+    movlw   0x69		
     movwf   TIME_H, A
-    movlw   0xE9
+    movlw   0xE6
     movwf   TIME_L, A
     
     movf    PRODL, W	; 16 bit adder
@@ -122,9 +122,9 @@ high_pulse:
     call    pulselength	; Configure pulse width in the cycle
      
 			; Delay = Delay0 - counter * increment
-    movlw   0xFC	; Define Delay0
+    movlw   0xF9	; Define Delay0
     movwf   TIME_H, A	
-    movlw   0xe9
+    movlw   0xEC
     movwf   TIME_L, A
     
     movf    PRODL, W	; Subtract counter * increment from delay0

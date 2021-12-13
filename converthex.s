@@ -130,7 +130,7 @@ decimal:
 	
 	movlw	0x05		; Multiply by our number k
 	movwf	ARG2H
-	movlw	0xc5
+	movlw	0x9E
 	movwf	ARG2L		
 	
 	call	multiply	; Following is the conversion routine
