@@ -1,7 +1,7 @@
  #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear ; external LCD subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I, LCD_clear ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read			    ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 
@@ -12,15 +12,27 @@ extrn	delay
 extrn pwm_counter
 	
 psect	udata_acs   ; reserve data space in access ram
-counter:    ds 1    ; reserve one byte for a counter variable
-delay_count: ds 1    ; reserve one byte for counter in the delay routine
+pwm_res:    ds 1    ; reserve one byte for a counter variable
+counter:    ds 1    ; reserve one byte for counter in the delay routine
 joystick_H: ds 1
 
 psect	udata_bank4 ; Reserve data in RAM
-msg:	ds 0xF	    ; 16 byte message
-    
-psect	code, abs
+myArray:    ds 0x80 ; reserve 128 bytes for message data
+msg:	    ds 0xF	    ; 16 byte message
+
+psect data
+myTable:
+	db	'D','i','s','t','a','n','c','e', ' ', '(', 'm','m',')', 0x0a
+					; message, plus carriage return
+	myTable_l   EQU	14	; length of data
+	align	2
 	
+;lcd_msg:
+    ;db	'D','i','s','t','a','n','c','e', ' ', '(', 'm','m',')', 0x0a
+    ;lcd_msg_l	EQU 14
+   ; align 2
+ 
+psect	code, abs
 rst:
     org 0x0000
     goto start
@@ -29,33 +41,28 @@ int:
     org 0x0008
     goto outputcheck
     
-    
 start:
     call    setup
+    movlw   0x1
+    movwf   pwm_res, A
+    
     call    pwm_setup
     call    ADC_Setup
     
     movlw   0x00
-    movwf   TRISH
-    movwf   TRISD
-   ; call test_adc
+    movwf   TRISH, A
+    movwf   TRISD, A
+    
+
 
 loop:
-    call    test_adc
-    
     call    ultra_main	    ;Send and receive ultrasound signal
     
-    movf    ANSH, W, A	    ; Writes converted distance reading to LCD
-    call    LCD_Write_Hex
-    movf    ANSL, W, A
-    call    LCD_Write_Hex
-    call    LCD_clear
-
+    call    lcd_display
     call    joystick_control   ; use joystick to set new counter
-   
     movff   pwm_counter, PORTD
-    ;incf    pwm_counter, 1, 0	; Increment counter variable 
     call    send_message
+    
     goto loop
 
     
@@ -66,9 +73,52 @@ setup:
     call	LCD_Setup	; setup LCD
     
     return
-    
 
-send_message:		; Output message to UART
+lcd_run_message: 	
+	lfsr	0, myArray		; Load FSR0 with address in RAM	
+	movlw	low highword(myTable)	; address of data in PM
+	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	movlw	high(myTable)	; address of data in PM
+	movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	movlw	low(myTable)	; address of data in PM
+	movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	movlw	myTable_l	; bytes to read
+	movwf 	counter, A		; our counter register
+test_loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter, A		; count down to zero
+	bra	test_loop		; keep going until finished
+		
+	movlw	myTable_l	; output message to UART
+	lfsr	2, myArray
+	call	UART_Transmit_Message
+
+	movlw	myTable_l	; output message to LCD
+	addlw	0xff		; don't send the final carriage return to LCD
+	lfsr	2, myArray
+	call	LCD_Write_Message
+
+	return
+	
+lcd_display:
+    movlw   0010000000B		; Write to first line
+    call    LCD_Send_Byte_I 
+    call    lcd_run_message
+    
+    movlw   0011000000B		; Write to second line
+    call    LCD_Send_Byte_I 
+    movlw   0x0
+    call    LCD_Write_Hex  
+    
+    movf    ANSH, W, A	    ; Writes converted distance reading to LCD  
+    call    LCD_Write_Hex
+    movf    ANSL, W, A
+    call    LCD_Write_Hex
+    
+    return
+    
+;********* UART TO COMPUTER****************************
+send_message:		; Output message to UART, interface to computer
     lfsr    0, msg 
     movff   ANSH, POSTINC0
     movff   ANSL, POSTINC0
@@ -79,19 +129,19 @@ send_message:		; Output message to UART
     lfsr    2, msg	; UART reads from FSR2	    
     call    UART_Transmit_Message
     return
-
+    
+;********* Joystick *************
 joystick_control:
+    call    ADC_Read		    ;output in ADRESH:ADRESL, 12 bit number
+    movff   ADRESH, joystick_H, A   ; Store value so it doesn't change
+    movff   joystick_H, PORTH, A
 
-
-    ;movff ADRESH, 0x30, A
-    ; If greater than, move right
-    movlw   0xA	    ;
+    
+    movlw   0xA	    ; If greater than, move right
     cpfsgt joystick_H, A	;less than
     bra    js_small
-    incf    pwm_counter, 1, 0	; Increment counter variable twice
-    incf    pwm_counter, 1, 0	
-    incf    pwm_counter, 1, 0	
-    incf    pwm_counter, 1, 0	
+    movf    pwm_res, W, A		; Decrement counter variable
+    subwf   pwm_counter, 1, 0
 joystick_done:
     return
     
@@ -99,16 +149,8 @@ js_small: ; If less than 1536, move left
     movlw   0x5	    ;
     cpfslt joystick_H, A
     bra joystick_done
-    decf    pwm_counter, 1, 0	; Decrement counter variable twice
-    decf    pwm_counter, 1, 0	
-    decf    pwm_counter, 1, 0	
-    decf    pwm_counter, 1, 0	
+    movf    pwm_res, W, A		; Increment counter variable
+    addwf   pwm_counter, 1, 0
     bra joystick_done
-
-test_adc:
-    call    ADC_Read ;output in ADRESH:ADRESL, 12 bit number
-    movff   ADRESH, joystick_H, A ; Store value 
-    movff   joystick_H, PORTH, A
-    return
     
 end rst

@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear
+global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_Send_Byte_I
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -153,7 +153,7 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 	
 LCD_clear:
-	call	LCD_delay_ms
+	;call	LCD_delay_ms
 	movlw	00000001B	; clears lcd
 	call	LCD_Send_Byte_I
 	
