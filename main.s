@@ -53,8 +53,6 @@ start:
     movwf   TRISH, A
     movwf   TRISD, A
     
-
-
 loop:
     call    ultra_main	    ;Send and receive ultrasound signal
     
@@ -115,6 +113,7 @@ lcd_display:
     movf    ANSL, W, A
     call    LCD_Write_Hex
     
+    call    LCD_clear
     return
     
 ;********* UART TO COMPUTER****************************

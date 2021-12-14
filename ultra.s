@@ -14,7 +14,7 @@ extrn decimal
 
 ultra_main:
     call ultra_init
-
+    
 ultra_start:
     call ultra_pulse	; Send outgoing signal
     

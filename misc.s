@@ -95,7 +95,7 @@ pulselength:		; calculates counter * increment
     
 low_pulse:
     ; Generates LOW part of pulse wave, with fixed 50 Hz duty cycle
-    incf    LATJ,  F,A	; increments LAT Register
+    btg    LATJ,  0,A	; increments LAT Register
     ;btg	    LATD, 0, A	; Output by toggling LAT Register
     movlw   0x69		
     movwf   TIME_H, A
@@ -117,7 +117,7 @@ high_pulse:
     ; Generates HIGH part of pulse wave, with fixed 50 Hz duty cycle
     ; Reconfigures interrupt pulse length
     
-    incf    LATJ,F,A	; Output by incrementing LAT Register
+    btg    LATJ,0,A	; Output by incrementing LAT Register
     ;btg	    LATD, 0, A	; Output by toggling LAT Register
     call    pulselength	; Configure pulse width in the cycle
      
