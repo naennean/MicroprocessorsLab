@@ -1,7 +1,7 @@
  #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I, LCD_clear ; external LCD subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I,LCD_Send_Byte_D, LCD_clear ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read			    ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 
@@ -87,9 +87,9 @@ test_loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	decfsz	counter, A		; count down to zero
 	bra	test_loop		; keep going until finished
 		
-	movlw	myTable_l	; output message to UART
-	lfsr	2, myArray
-	call	UART_Transmit_Message
+	;movlw	myTable_l	; output message to UART
+	;lfsr	2, myArray
+	;call	UART_Transmit_Message
 
 	movlw	myTable_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
@@ -101,19 +101,21 @@ test_loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 lcd_display:
     movlw   0010000000B		; Write to first line
     call    LCD_Send_Byte_I 
+    
+    movlw   0x0
+    call    LCD_Send_Byte_D
     call    lcd_run_message
     
     movlw   0011000000B		; Write to second line
     call    LCD_Send_Byte_I 
+  
     movlw   0x0
-    call    LCD_Write_Hex  
+    call    LCD_Send_Byte_D
     
     movf    ANSH, W, A	    ; Writes converted distance reading to LCD  
     call    LCD_Write_Hex
     movf    ANSL, W, A
     call    LCD_Write_Hex
-    
-    call    LCD_clear
     return
     
 ;********* UART TO COMPUTER****************************
@@ -145,7 +147,7 @@ joystick_done:
     return
     
 js_small: ; If less than 1536, move left
-    movlw   0x5	    ;
+    movlw   0x5	    
     cpfslt joystick_H, A
     bra joystick_done
     movf    pwm_res, W, A		; Increment counter variable

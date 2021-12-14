@@ -7,6 +7,9 @@ pwm_counter:		ds 1	; variable for counting pwm duty cycle
 Increment:		ds 1	; fixed time lengthener
 TIME_H:			ds 1	; high 8 bits for time change
 TIME_L:			ds 1	; low 8 bits for time change
+    
+T_CHANGE_H:		ds 1
+T_CHANGE_L:		ds 1
 
 psect	misc_code, class=CODE
     
@@ -61,6 +64,8 @@ pwm_setup:	    ; initialises variables for looping, output and the interrupts
     ;clrf    LATJ
     movlw   0x00
     movwf   TRISJ
+    movwf   T_CHANGE_H
+    movwf   T_CHANGE_L
     ;movlw   0x00
     ;movwf   TRISH
     
@@ -91,6 +96,8 @@ pulselength:		; calculates counter * increment
     
     movf  pwm_counter, W
     mulwf Increment	; multiply, result in PRODH:PRODL
+    movff   PRODL, T_CHANGE_L
+    movff   PRODH, T_CHANGE_H
     return 
     
 low_pulse:
@@ -102,9 +109,9 @@ low_pulse:
     movlw   0xE6
     movwf   TIME_L, A
     
-    movf    PRODL, W	; 16 bit adder
+    movf    T_CHANGE_L, W	; 16 bit adder
     addwf   TIME_L, 1
-    movf    PRODH, W
+    movf    T_CHANGE_H, W
     addwfc  TIME_H, 1
     
     movff   TIME_H, TMR0H ; Update interrupt timer control registers
@@ -127,9 +134,9 @@ high_pulse:
     movlw   0xEC
     movwf   TIME_L, A
     
-    movf    PRODL, W	; Subtract counter * increment from delay0
+    movf    T_CHANGE_L, W	; Subtract counter * increment from delay0
     subwf   TIME_L,f, A	; to increase length of high pulse
-    movf    PRODH, 0
+    movf    T_CHANGE_H, 0
     subwfb  TIME_H, f, A	
     
     movff   TIME_H, TMR0H	; Update interrupt timer control registers
