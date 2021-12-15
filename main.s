@@ -2,7 +2,7 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I,LCD_Send_Byte_D, LCD_clear ; external LCD subroutines
-extrn	ADC_Setup, ADC_Read			    ; external ADC subroutines
+extrn	ADC_Setup, ADC_Read, ADC_Read_1	    ; external ADC subroutines
 extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 
 extrn	pwm_setup, outputcheck  
@@ -55,7 +55,6 @@ start:
     
 loop:
     call    ultra_main	    ;Send and receive ultrasound signal
-    
     call    lcd_display
     call    joystick_control   ; use joystick to set new counter
     movff   pwm_counter, PORTD
@@ -133,7 +132,7 @@ send_message:		; Output message to UART, interface to computer
     
 ;********* Joystick *************
 joystick_control:
-    call    ADC_Read		    ;output in ADRESH:ADRESL, 12 bit number
+    call    ADC_Read_1		    ;output in ADRESH:ADRESL, 12 bit number
     movff   ADRESH, joystick_H, A   ; Store value so it doesn't change
     movff   joystick_H, PORTH, A
 
