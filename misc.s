@@ -3,17 +3,25 @@
 psect	udata_acs   ; reserve data space in access ram
 DELAY_H:		ds 1    ; high 8 bits for delay
 DELAY_L:		ds 1	; low 8 bits for delay
-pwm_counter:		ds 1	; variable for counting pwm duty cycle
+
 Increment:		ds 1	; fixed time lengthener
-TIME_H:			ds 1	; high 8 bits for time change
-TIME_L:			ds 1	; low 8 bits for time change
     
-T_CHANGE_H:		ds 1
-T_CHANGE_L:		ds 1
+TIME_H:			ds 1	; high 8 bits for total time change
+TIME_L:			ds 1	; low 8 bits for total time change
+    
+; Data bytes for servo 0
+T_CHANGE_H:		ds 1	; high& low 8 bits for partial time change
+T_CHANGE_L:		ds 1	
+pwm_counter:		ds 1	; variable for counting pwm duty cycle
+
+; Data bytes for servo 1
+T_CHANGE1_H:		ds 1	; high& low 8 bits for partial time change
+T_CHANGE1_L:		ds 1
+pwm_counter1:		ds 1
 psect	misc_code, class=CODE
     
 global pwm_setup, pwm_main, outputcheck
-global Delay_set, DelayL_set, DelayH_set, delay, pwm_counter
+global Delay_set, DelayL_set, DelayH_set, delay, pwm_counter, pwm_counter1
 
 ; STANDARD 16 BIT LOOP DELAY
 Delay_set:
@@ -81,8 +89,8 @@ pwm_setup:	    ; initialises variables for looping, output and the interrupts
     
     movlw   00110001B	    ; Enable timer1 interrupts and configure length
     movwf   T1CON, A
-    bcf	    TMR1IE
-    ;bsf	    PEIE
+    bsf	    TMR1IE
+    bsf	    PEIE
     
     bsf	    GIE	    ; Enable all interrupts
   
@@ -99,14 +107,14 @@ check_int0:
     bra low_pulse
   
 check_int1:
-    btfss   TMR1IF  
+    btfss   TMR1IF
     retfie  f	    ;return if not interrupt 
 
-    bcf	    LATJ,  6,A	
-    retfie  f	    ;return if not interrupt 
-    ;btg	    LATJ,  4,A	
+    bcf	    LATJ,  5,A
     
-    ;retfie  f
+    bcf	    TMR1IF		; Clear interrupt flag
+    retfie  f	    ;return if not interrupt 
+    
     
 pulselength:		; calculates counter * increment
     
@@ -115,11 +123,18 @@ pulselength:		; calculates counter * increment
     movff   PRODL, T_CHANGE_L
     movff   PRODH, T_CHANGE_H
     return 
+
+pulselength1:		; calculates counter * increment
+    movf  pwm_counter1, W
+    ;movlw   0x00
+    mulwf Increment	; multiply, result in PRODH:PRODL
+    movff   PRODL, T_CHANGE1_L
+    movff   PRODH, T_CHANGE1_H
+    return 
     
 low_pulse:
     ; Generates LOW part of pulse wave, with fixed 50 Hz duty cycle
-    btg    LATJ,  0,A	; increments LAT Register
-    ;btg	    LATD, 0, A	; Output by toggling LAT Register
+    bcf    LATJ,  0,A	; increments LAT Register
     movlw   0x69		
     movwf   TIME_H, A
     movlw   0xE6
@@ -134,33 +149,44 @@ low_pulse:
     movff   TIME_L, TMR0L
     
     bcf	    TMR0IF
-    goto    check_int1
+    retfie  f
     
 high_pulse:
     ; Generates HIGH part of pulse wave, with fixed 50 Hz duty cycle
     ; Reconfigures interrupt pulse length
     
-    btg    LATJ,0,A	; Output by incrementing LAT Register
-    bsf    LATJ, 6,A
+    bsf    LATJ, 0,A	; Output by toggling LAT Register
+    bsf    LATJ, 5,A
+    
     call    pulselength	; Configure pulse width in the cycle
-     
-			; Delay = Delay0 - counter * increment
-    movlw   0xF9	; Define Delay0
-    movwf   TIME_H, A	
+    movlw   0xF9	; Delay = Delay0 - counter * increment
+    movwf   TIME_H, A	; Define Delay0
     movlw   0xEC
     movwf   TIME_L, A
     
     movf    T_CHANGE_L, W	; Subtract counter * increment from delay0
-    subwf   TIME_L,f, A	; to increase length of high pulse
+    subwf   TIME_L,f, A		; to increase length of high pulse
     movf    T_CHANGE_H, 0
     subwfb  TIME_H, f, A	
     
     movff   TIME_H, TMR0H	; Update interrupt timer control registers
     movff   TIME_L, TMR0L	; Must update TMR0L for TMR0H to register
     
+    ;*** Same code for the second servo ************
+    call    pulselength1	; Configure pulse width in the cycle
+    movlw   0xF9	    
+    movwf   TIME_H, A	
+    movlw   0xEC
+    movwf   TIME_L, A
+    
+    movf    T_CHANGE1_L, W	; Subtract counter * increment from delay0
+    subwf   TIME_L,f, A		; to increase length of high pulse
+    movf    T_CHANGE1_H, 0
+    subwfb  TIME_H, f, A	
+    
     movff   TIME_H, TMR1H
     movff   TIME_L, TMR1L
    
     bcf	    TMR0IF		; Clear interrupt flag
     bcf	    TMR1IF		; Clear interrupt flag
-    goto    check_int1
+    retfie  f
