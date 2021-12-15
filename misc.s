@@ -10,7 +10,6 @@ TIME_L:			ds 1	; low 8 bits for time change
     
 T_CHANGE_H:		ds 1
 T_CHANGE_L:		ds 1
-
 psect	misc_code, class=CODE
     
 global pwm_setup, pwm_main, outputcheck
@@ -57,13 +56,15 @@ pwm_main:
 pwm_setup:	    ; initialises variables for looping, output and the interrupts
     movlw 0x00	    
     movwf   pwm_counter, A
-    movlw   0x0E	    
+    movlw   0x0E
+    ;movlw   0x00
     movwf   Increment, A
 
     ;clrf    TRISJ  ; sets PORTD as output
-    ;clrf    LATJ
+    
     movlw   0x00
     movwf   TRISJ
+    clrf    LATJ
     movwf   T_CHANGE_H
     movwf   T_CHANGE_L
     ;movlw   0x00
@@ -74,23 +75,38 @@ pwm_setup:	    ; initialises variables for looping, output and the interrupts
     ;movwf   PORTJ
    ; movwf   LATH
     ;movwf   PORTH
-    movlw   10000010B ; Configure length of timer0
+    movlw   10000010B	; Configure length of timer0
     movwf   T0CON,A   
-    bsf	    TMR0IE	    ; Enable timer0 interrupts
+    bsf	    TMR0IE	; Enable timer0 interrupts
+    
+    movlw   00110001B	    ; Enable timer1 interrupts and configure length
+    movwf   T1CON, A
+    bcf	    TMR1IE
+    ;bsf	    PEIE
+    
     bsf	    GIE	    ; Enable all interrupts
   
     return
     
     
-outputcheck:
-    ; Tests signal PORT to see whether a low or high pulse is next needed
-    btfss TMR0IF    ;bit test f,skip if set  
-    retfie f	    ;return if not interrupt 
-   
+outputcheck: ; Tests signal PORTS to see whether a low or high pulse is next needed
+check_int0:
+    btfss  TMR0IF    ; Service interrupt 0
+    bra	   check_int1    
+    
     btfss PORTJ, 0, A
     bra high_pulse
     bra low_pulse
+  
+check_int1:
+    btfss   TMR1IF  
+    retfie  f	    ;return if not interrupt 
+
+    bcf	    LATJ,  6,A	
+    retfie  f	    ;return if not interrupt 
+    ;btg	    LATJ,  4,A	
     
+    ;retfie  f
     
 pulselength:		; calculates counter * increment
     
@@ -118,14 +134,14 @@ low_pulse:
     movff   TIME_L, TMR0L
     
     bcf	    TMR0IF
-    retfie  f
+    goto    check_int1
     
 high_pulse:
     ; Generates HIGH part of pulse wave, with fixed 50 Hz duty cycle
     ; Reconfigures interrupt pulse length
     
     btg    LATJ,0,A	; Output by incrementing LAT Register
-    ;btg	    LATD, 0, A	; Output by toggling LAT Register
+    bsf    LATJ, 6,A
     call    pulselength	; Configure pulse width in the cycle
      
 			; Delay = Delay0 - counter * increment
@@ -141,6 +157,10 @@ high_pulse:
     
     movff   TIME_H, TMR0H	; Update interrupt timer control registers
     movff   TIME_L, TMR0L	; Must update TMR0L for TMR0H to register
+    
+    movff   TIME_H, TMR1H
+    movff   TIME_L, TMR1L
    
     bcf	    TMR0IF		; Clear interrupt flag
-    retfie  f
+    bcf	    TMR1IF		; Clear interrupt flag
+    goto    check_int1
