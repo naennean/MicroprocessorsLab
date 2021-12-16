@@ -9,12 +9,13 @@ extrn	pwm_setup, outputcheck
 extrn	ultra_main, ANSH, ANSL, LENH,LENL 
 extrn	delay
 
-extrn pwm_counter
+extrn pwm_counter, pwm_counter1
 	
 psect	udata_acs   ; reserve data space in access ram
 pwm_res:    ds 1    ; reserve one byte for a counter variable
 counter:    ds 1    ; reserve one byte for counter in the delay routine
-joystick_H: ds 1
+joystick_LR: ds 1
+joystick_UD: ds 1
 
 psect	udata_bank4 ; Reserve data in RAM
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -58,6 +59,7 @@ loop:
     call    lcd_display
     call    joystick_control   ; use joystick to set new counter
     movff   pwm_counter, PORTD
+    movff   pwm_counter1, PORTH, A
     call    send_message
     
     goto loop
@@ -132,25 +134,46 @@ send_message:		; Output message to UART, interface to computer
     
 ;********* Joystick *************
 joystick_control:
-    call    ADC_Read_1		    ;output in ADRESH:ADRESL, 12 bit number
-    movff   ADRESH, joystick_H, A   ; Store value so it doesn't change
-    movff   joystick_H, PORTH, A
-
+    call    ADC_Read		    ;output in ADRESH:ADRESL, 12 bit number
+    movff   ADRESH, joystick_LR, A   ; Store value so it doesn't change
     
+    
+    call    ADC_Read_1		    ;output in ADRESH:ADRESL, 12 bit number
+    movff   ADRESH, joystick_UD, A   ; Store value so it doesn't change
+
+control_lr:
+js_right:
     movlw   0xA	    ; If greater than, move right
-    cpfsgt joystick_H, A	;less than
-    bra    js_small
+    cpfsgt joystick_LR, A	;less than
+    bra    js_left
     movf    pwm_res, W, A		; Decrement counter variable
     subwf   pwm_counter, 1, 0
-joystick_done:
-    return
     
-js_small: ; If less than 1536, move left
+ 
+js_left: ; If less than 1536, move left
     movlw   0x5	    
-    cpfslt joystick_H, A
-    bra joystick_done
+    cpfslt joystick_LR, A
+    bra	    control_ud
     movf    pwm_res, W, A		; Increment counter variable
     addwf   pwm_counter, 1, 0
-    bra joystick_done
+    bra	    control_ud
     
+control_ud:
+js_up:
+    movlw   0xA			; If greater than, move up
+    cpfsgt joystick_UD, A	;less than
+    bra    js_down
+    movf    pwm_res, W, A		; Decrement counter variable
+    subwf   pwm_counter1, 1, 0
+joystick_done:
+    
+    return
+    
+js_down:
+    movlw   0x5	    
+    cpfslt  joystick_UD, A
+    bra	    joystick_done
+    movf    pwm_res, W, A		; Increment counter variable
+    addwf   pwm_counter1, 1, 0
+    bra joystick_done
 end rst

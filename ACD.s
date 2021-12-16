@@ -4,7 +4,7 @@ global  ADC_Setup, ADC_Read, ADC_Read_1
     
 psect	adc_code, class=CODE
     
-ADC_Setup:
+ADC_Setup:		    ; Sets up two ADCs
 	bsf	TRISA, PORTA_RA0_POSN, A  ; pin RA0==AN0 input
 	bsf	TRISA, PORTA_RA1_POSN, A  ; pin RA1==AN1 input
 	movlb	0x0f	    ; Modify bank selection register for ANCON0
