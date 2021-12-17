@@ -64,10 +64,6 @@ multiply:
 	CLRF WREG ;
 	ADDWFC RES3, F ;
 	
-	movff	RES0,0x10   ;Store results in registers
-	movff	RES1,0x11
-	movff	RES2,0x12
-	movff	RES3,0x13
 	return
 	
 multiply_24:
@@ -104,12 +100,6 @@ multiply_24:
 	ADDWFC	RES3, F	    ;
 			    ;
 
-	
-	;movff	RES0,0x20   ;Store results in registers
-	;movff	RES1,0x21
-	;movff	RES2,0x22
-	;movff	RES3,0x23
-	
 	return
 
 decimal:  
@@ -130,7 +120,7 @@ decimal:
 	
 	movlw	0x05		; Multiply by our number k
 	movwf	ARG2H
-	movlw	0x9E
+	movlw	0xBD
 	movwf	ARG2L		
 	
 	call	multiply	; Following is the conversion routine
@@ -154,9 +144,6 @@ decimal:
 	call	extract_next	; Extract next bit, combine it with previous bit
 	movf	RES3,W
 	addwf	ANSL,1
-	
-	movff	ANSH, 0x60
-	movff	ANSL, 0x61
 	
 	
 	return

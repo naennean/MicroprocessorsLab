@@ -62,9 +62,9 @@ pulse_delay:			; 5 us delay for the ultrasound
 	bra Dloop
 	
 wait_delay:
-	movlw 0x0B		; Configure the delay for the waiting pulse
+	movlw 0x07		; Configure the delay for the waiting pulse
 	movwf DELAY_H, A
-	movlw 0xAA
+	movlw 0xBC
 	movwf DELAY_L, A
 	movlw 0x00 ; W = 0
 	bra Dloop
