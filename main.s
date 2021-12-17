@@ -87,10 +87,6 @@ test_loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter, A		; count down to zero
 	bra	test_loop		; keep going until finished
-		
-	;movlw	myTable_l	; output message to UART
-	;lfsr	2, myArray
-	;call	UART_Transmit_Message
 
 	movlw	myTable_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
@@ -122,12 +118,30 @@ lcd_display:
 ;********* UART TO COMPUTER****************************
 send_message:		; Output message to UART, interface to computer
     lfsr    0, msg 
+    movlw   0xAB	; Padding for start byte
+    movwf   POSTINC0
+    movlw   0xCD	; Padding for start byte
+    movwf   POSTINC0
+    movlw   0xEF	; Padding for start byte
+    movwf   POSTINC0
     movff   ANSH, POSTINC0
     movff   ANSL, POSTINC0
     movff   pwm_counter, POSTINC0
+    movff   pwm_counter1, POSTINC0
+    
+    movlw   0xAB	; Send message twice
+    movwf   POSTINC0
+    movlw   0xCD
+    movwf   POSTINC0
+    movlw   0xEF
+    movwf   POSTINC0
+    movff   ANSH, POSTINC0
+    movff   ANSL, POSTINC0
+    movff   pwm_counter, POSTINC0
+    movff   pwm_counter1, POSTINC0
 
     
-    movlw   0x3		; Load message length into W
+    movlw   0xE		; Load message length into W
     lfsr    2, msg	; UART reads from FSR2	    
     call    UART_Transmit_Message
     return
