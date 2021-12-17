@@ -1,8 +1,7 @@
 # Microprocessors
-Repository for Physics Year 3 microprocessors lab
+Callum Hill and Kenton Kwok
+November-December 2021
 
-A simple assembly program for PIC18 microprocessor
+Repository for Imperial College Physics Year 3 Microprocessors lab
 
-Reads a table (message) from programme memory to data memory
-
-Initialises UART and writes a message (the table) to UART 
+2D Configurable Distance Ranger for PIC18 Microprocessor
