@@ -19,7 +19,6 @@
       <itemPath>config.s</itemPath>
       <itemPath>converthex.s</itemPath>
       <itemPath>misc.s</itemPath>
-      <itemPath>servo.s</itemPath>
       <itemPath>ultra.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -81,7 +80,7 @@
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
-        <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>

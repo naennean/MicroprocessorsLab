@@ -23,7 +23,7 @@ psect	misc_code, class=CODE
 global pwm_setup, pwm_main, outputcheck
 global Delay_set, DelayL_set, DelayH_set, delay, pwm_counter, pwm_counter1
 
-; STANDARD 16 BIT LOOP DELAY
+; ****STANDARD 16 BIT LOOP DELAY******
 Delay_set:
 	movlw 0xFF
 	movwf DELAY_H, A
@@ -65,24 +65,16 @@ pwm_setup:	    ; initialises variables for looping, output and the interrupts
     movlw 0x00	    
     movwf   pwm_counter, A
     movlw   0x0E
-    ;movlw   0x00
+
     movwf   Increment, A
 
-    ;clrf    TRISJ  ; sets PORTD as output
     
     movlw   0x00
     movwf   TRISJ
     clrf    LATJ
     movwf   T_CHANGE_H
     movwf   T_CHANGE_L
-    ;movlw   0x00
-    ;movwf   TRISH
-    
-    ;movlw   0xff
-    ;movwf   LATJ
-    ;movwf   PORTJ
-   ; movwf   LATH
-    ;movwf   PORTH
+
     movlw   10000010B	; Configure length of timer0
     movwf   T0CON,A   
     bsf	    TMR0IE	; Enable timer0 interrupts
@@ -106,14 +98,14 @@ check_int0:
     bra high_pulse
     bra low_pulse
   
-check_int1:
+check_int1:	    ; Service interrupt 1
     btfss   TMR1IF
-    retfie  f	    ;return if not interrupt 
+    retfie  f		;return if not interrupt 
 
     bcf	    LATJ,  5,A
     
-    bcf	    TMR1IF		; Clear interrupt flag
-    retfie  f	    ;return if not interrupt 
+    bcf	    TMR1IF	; Clear interrupt flag
+    retfie  f		;return if not interrupt 
     
     
 pulselength:		; calculates counter * increment

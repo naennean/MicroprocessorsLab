@@ -3,7 +3,6 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I,LCD_Send_Byte_D, LCD_clear ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Read_1	    ; external ADC subroutines
-extrn	multiply, multiply_24, decimal		   ; external ADC subroutines
 
 extrn	pwm_setup, outputcheck  
 extrn	ultra_main, ANSH, ANSL, LENH,LENL 
@@ -22,29 +21,28 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 msg:	    ds 0xF	    ; 16 byte message
 
 psect data
-myTable:
+myTable:	    ; Table to store message data for LCD
 	db	'D','i','s','t','a','n','c','e', ' ', '(', 'm','m',')', 0x0a
 					; message, plus carriage return
 	myTable_l   EQU	14	; length of data
 	align	2
 	
-;lcd_msg:
-    ;db	'D','i','s','t','a','n','c','e', ' ', '(', 'm','m',')', 0x0a
-    ;lcd_msg_l	EQU 14
-   ; align 2
- 
 psect	code, abs
-rst:
+rst:		; Reset vector
     org 0x0000
     goto start
     
-int:
+int:		; Interrupt vector
     org 0x0008
     goto outputcheck
     
-start:
-    call    setup
-    movlw   0x1
+start:		 ; Initialisation of ports and processes
+    bcf		CFGS	; point to Flash program memory  
+    bsf		EEPGD 	; access Flash program memory
+    call	UART_Setup	; setup UART
+    call	LCD_Setup	; setup LCD
+    
+    movlw   0x1	    
     movwf   pwm_res, A
     
     call    pwm_setup
@@ -53,7 +51,8 @@ start:
     movlw   0x00
     movwf   TRISH, A
     movwf   TRISD, A
-    
+
+;*** MAIN LOOP******************
 loop:
     call    ultra_main	    ;Send and receive ultrasound signal
     call    lcd_display
@@ -63,16 +62,9 @@ loop:
     call    send_message
     
     goto loop
-
+   
     
-setup:
-    bcf		CFGS	; point to Flash program memory  
-    bsf		EEPGD 	; access Flash program memory
-    call	UART_Setup	; setup UART
-    call	LCD_Setup	; setup LCD
-    
-    return
-
+;*** LCD MESSAGE ROUTINE******************
 lcd_run_message: 	
 	lfsr	0, myArray		; Load FSR0 with address in RAM	
 	movlw	low highword(myTable)	; address of data in PM
@@ -94,7 +86,7 @@ test_loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 
 	return
-	
+
 lcd_display:
     movlw   0010000000B		; Write to first line
     call    LCD_Send_Byte_I 
@@ -120,9 +112,9 @@ send_message:		; Output message to UART, interface to computer
     lfsr    0, msg 
     movlw   0xAB	; Padding for start byte
     movwf   POSTINC0
-    movlw   0xCD	; Padding for start byte
+    movlw   0xCD	
     movwf   POSTINC0
-    movlw   0xEF	; Padding for start byte
+    movlw   0xEF	
     movwf   POSTINC0
     movff   ANSH, POSTINC0
     movff   ANSL, POSTINC0
@@ -157,10 +149,10 @@ joystick_control:
 
 control_lr:
 js_right:
-    movlw   0xA	    ; If greater than, move right
-    cpfsgt joystick_LR, A	;less than
+    movlw   0xA			    ; If greater than, move right
+    cpfsgt joystick_LR, A	    ;less than
     bra    js_left
-    movf    pwm_res, W, A		; Decrement counter variable
+    movf    pwm_res, W, A	    ; Decrement counter variable
     subwf   pwm_counter, 1, 0
     
  
@@ -174,8 +166,8 @@ js_left: ; If less than 1536, move left
     
 control_ud:
 js_up:
-    movlw   0xA			; If greater than, move up
-    cpfsgt joystick_UD, A	;less than
+    movlw   0xA				; If greater than, move up
+    cpfsgt joystick_UD, A		;less than
     bra    js_down
     movf    pwm_res, W, A		; Decrement counter variable
     subwf   pwm_counter1, 1, 0
@@ -189,5 +181,5 @@ js_down:
     bra	    joystick_done
     movf    pwm_res, W, A		; Increment counter variable
     addwf   pwm_counter1, 1, 0
-    bra joystick_done
+    bra	    joystick_done
 end rst

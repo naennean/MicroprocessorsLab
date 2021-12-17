@@ -24,14 +24,8 @@ ANSL:		ds 1
 
 psect	mult_code,class=CODE
 
-multiply:
-	        
-	;movwf	ARG1L
-	;movwf	ARG2L
-	;movwf	ARG1H
-	;movwf	ARG2H
-	
-    
+multiply:		; 16 bit by 16 bit multiply routine
+	   
 	MOVF ARG1L, W
 	MULWF ARG2L ; ARG1L * ARG2L->
 	; PRODH:PRODL
@@ -66,17 +60,7 @@ multiply:
 	
 	return
 	
-multiply_24:
-	;movlw	0xAB        
-	;movwf	ARG1L
-	;movlw	0xCD  
-	;movwf	ARG1H
-	;movlw	0xEF
-	;movwf	ARG1T
-	
-	;movlw	0xDD
-	;movwf	ARG2L
-	
+multiply_24:		    ; 24 bit by 8 bit multiply routine
 	MOVF	ARG1L, W
 	MULWF	ARG2L	    ; ARG1L * ARG2L->
 			    ; PRODH:PRODL
@@ -108,12 +92,6 @@ decimal:
 	; Hex input is in LENH:LENL
 	; Number in k can be configured
 	; The output is a 16 bit hex number where its digits is a decimal
-	
-	;movlw	0x07
-	;movwf	LENH, A
-	;movlw	0x58
-	;movwf	LENL, A
-    
 	
 	movff	LENH, ARG1H	; Extract first bit
 	movff	LENL, ARG1L
@@ -149,7 +127,6 @@ decimal:
 	return
 	
 	
-
 extract_next:
 	movff	RES0, ARG1L ;Store results in registers for multiplication
 	movff	RES1, ARG1H

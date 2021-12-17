@@ -12,9 +12,8 @@ global	LENH,LENL
 extrn decimal 
 
 
+; *** Main ultrasound routine***
 ultra_main:
-    call ultra_init
-    
 ultra_start:
     call ultra_pulse	; Send outgoing signal
     
@@ -22,14 +21,8 @@ ultra_start:
     call ultra_convert
     ;call step_delay
     return
- 
-ultra_init:		; Initialises Echo ports
-    ;movlw 0x00
-    ;movwf TRISH
-    ;movwf TRISJ
-	
-    return
-    
+
+; *** Forward pulse ****
 ultra_pulse:		; This triggers the ultrasonic sensor
     movlw   0x00	; Configure PORTE direction register as output
     movwf   TRISE, A	 
@@ -43,6 +36,7 @@ ultra_pulse:		; This triggers the ultrasonic sensor
 
     return
 
+; *** Measure echo ****
 ultra_receive:		; This aims to receive the return echo pulse
     movlw   0xff	; Configure PORTE direction register as input
     movwf   TRISE, A
@@ -52,7 +46,7 @@ ultra_receive:		; This aims to receive the return echo pulse
     return
 
 
- 
+; *** Useful delays  ****
 pulse_delay:			; 5 us delay for the ultrasound
 	movlw 0x00		; Configure the delay for the ultrasound pulse
 	movwf DELAY_H, A
@@ -82,6 +76,7 @@ Dloop:	decf	DELAY_L, f, A	; Delay loop for 16 bit counter decrement
 	bc	Dloop		; branch if carry in high bits
 	return			; otherwise return, decrement finished
 
+; ******* ROUTINE FOR PULSE LENGTH MEASUREMENT******************
 meas_pulse_len:		; Counts for how long the return pulse is on for
 	movlw	0x00		; sets our counter to be 0 initially
 	movwf	LENH, A
@@ -98,19 +93,12 @@ pulse_count:
 	incf	LENH, f, A
 	bra	pulse_count
 
-extract_count:	    ; branch and echo final counter value to another PORT
-    	;movff LENH, 0x40, A
-	;movff LENL, 0x41, A
-	
-	;movff LENH, PORTH
-	;movff LENL, PORTJ
+extract_count:	    ; return from measurement routine
+	return	    
 
-	return
-
+; ******* Converts distance to a decimal ******************
 ultra_convert:
     ; converts LENH:LENL into a 4 digits for display use to the LCD
-    ;movff LENH, 0x50, A
-    ;movff LENL, 0x51, A
     call decimal 
     return 
 
