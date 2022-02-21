@@ -6,6 +6,9 @@ extrn	LCD_Setup, LCD_Write_Message
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+delaydelay_count:ds 1
+delayCubed_count:ds 1
+    
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -13,9 +16,9 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
 myTable:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
+	db	'H','e','l','l','o',' ','W','o','r','l','d','?','H','e','l','l','o',' ','W','o','r','l','d','?',0x0a
 					; message, plus carriage return
-	myTable_l   EQU	13	; length of data
+	myTable_l   EQU	26	; length of data
 	align	2
     
 psect	code, abs	
@@ -55,9 +58,31 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 	goto	$		; goto current line in code
 
-	; a delay subroutine if you need one, times around loop in delay_count
-delay:	decfsz	delay_count, A	; decrement until zero
-	bra	delay
+;	; a delay subroutine if you need one, times around loop in delay_count
+;delay:	decfsz	delay_count, A	; decrement until zero
+;	bra	delay
+;	return
+	
+delay:
+	movlw	0xff
+	movwf	delay_count	    ;store 0xff in 0x02 for delay
+delayloop:
+	movlw	0xff
+	movwf	delaydelay_count	    ;store 0xff in 0x02 for delay	
+	call	delaydelay
+	decfsz  delay_count		;decrement from 0x20 down to 0
+	bra	delayloop		;when line above reaches zero, will skip this line
 	return
-
+	
+delaydelay:
+	movlw	0xff
+	movwf	delayCubed_count	    ;store 0xff in 0x02 for delay	
+	call	delayCubed
+	decfsz	delaydelay_count
+	bra	delaydelay
+	return
+delayCubed:
+	decfsz	delayCubed_count
+	bra	delayCubed
+	return
 	end	rst
