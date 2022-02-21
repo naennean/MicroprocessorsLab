@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message
+global  LCD_Setup, LCD_Write_Message, LCD_clear, LCD_shift
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -137,7 +137,14 @@ LCD_clear:
 	call	LCD_Send_Byte_I
 	movlw	2		; wait 2ms
 	call	LCD_delay_ms
-	
+	return
+
+LCD_shift:
+	movlw	0011000000B	; entry mode incr by 1 no shift
+	call	LCD_Send_Byte_I
+	movlw	10		; wait 40us
+	call	LCD_delay_x4us
+	return
     end
 
 
