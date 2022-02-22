@@ -1,9 +1,11 @@
 
     #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message
+global  KP_Setup, KP_read_row, KP_read_col
 
 psect	udata_acs   ; named variables in access ram
+read_row:	ds 1	; reserve one byte for row values
+read_col:	ds 1	; reserve one byte for row values
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1   ; reserve 1 byte for ms counter
@@ -15,37 +17,30 @@ LCD_counter:	ds 1   ; reserve 1 byte for counting through nessage
 
 psect	lcd_code,class=CODE
     
-LCD_Setup:
-	clrf    LATB, A
-	movlw   11000000B	    ; RB0:5 all outputs
-	movwf	TRISB, A
-	movlw   40
-	call	LCD_delay_ms	; wait 40ms for LCD to start up properly
-	movlw	00110000B	; Function set 4-bit
-	call	LCD_Send_Byte_I
-	movlw	10		; wait 40us
-	call	LCD_delay_x4us
-	movlw	00101000B	; 2 line display 5x8 dot characters
-	call	LCD_Send_Byte_I
-	movlw	10		; wait 40us
-	call	LCD_delay_x4us
-	movlw	00101000B	; repeat, 2 line display 5x8 dot characters
-	call	LCD_Send_Byte_I
-	movlw	10		; wait 40us
-	call	LCD_delay_x4us
-	movlw	00001111B	; display on, cursor on, blinking on
-	call	LCD_Send_Byte_I
-	movlw	10		; wait 40us
-	call	LCD_delay_x4us
-	movlw	00000001B	; display clear
-	call	LCD_Send_Byte_I
-	movlw	2		; wait 2ms
-	call	LCD_delay_ms
-	movlw	00000110B	; entry mode incr by 1 no shift
-	call	LCD_Send_Byte_I
-	movlw	10		; wait 40us
-	call	LCD_delay_x4us
+KP_Setup:
+	movlb	0xf		; bank 15
+	bsf	PADCFG1, 6, B	 ;set REPU bit in PADCFG1 to enable pull-up resistors on PORTE
+	clrf	LATE		; write 0s to LATE register
+	movlw	0x0f		; 00001111
+	movwf	TRISE, A	;configures PORTE 4-7 as outputs and PORTE 0-3 as inputs
 	return
+	
+KP_read_row:
+	movlw	0x0f		; 00001111
+	movwf	TRISE, A	;configures PORTE 4-7 as outputs and PORTE 0-3 as inputs
+;	movlw	0x0f
+	movff	PORTE, read_row, A
+	cpfslt	read_row, A
+	;add smth that shows whether button has been pressed
+	
+	return
+KP_read_col:
+	movlw	0xf0		; 11110000
+	;REMEMBER TO USE LW HIGHWORD OR SMTH
+	movwf	TRISE, A	;configures PORTE 4-7 as inputs and PORTE 0-3 as outputs
+	
+	
+	
 
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
