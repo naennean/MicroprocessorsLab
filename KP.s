@@ -83,6 +83,8 @@ KP_decode:
 
     ;;;;; ADD 17 FUnctions to decode keypad and send ASCII to LCD display
     
+    ;;make at least 2 keys work
+    
     
 ;	movlw	0x01 ; (binary for button 1~)
 ;	cpfseq PORTD, A
