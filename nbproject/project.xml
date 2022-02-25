@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Simple1</name>
+            <name>Lecture_sessions</name>
             <creation-uuid>365f4bb0-f88d-4b90-a2ad-2bf533a59236</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions/>
@@ -12,7 +12,9 @@
             <asminc-extensions/>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
-            <sourceRootList/>
+            <sourceRootList>
+                <sourceRootElem>//icnas2.cc.ic.ac.uk/mf919/YEAR_3/Microprocessors/microprocessorslab</sourceRootElem>
+            </sourceRootList>
             <confList>
                 <confElem>
                     <name>default</name>
