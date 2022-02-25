@@ -1,5 +1,5 @@
 	#include <xc.inc>
-extrn	KP_Setup, KP_read_col,KP_read_row,read_row, read_col
+extrn	KP_Setup, KP_read, read_keypad
 
 psect	udata_acs   ; reserve data space in access ram
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
@@ -21,14 +21,14 @@ setup:
 start:
 	call	KP_Setup
 read:
-	call	KP_read_col
-	call	KP_read_row
-	movff	read_row, WREG
-	addwf	read_col, W, A
-;	movwf	PORTD, A
-;	movff	read_col, WREG
-	movwf	PORTD, A
+	call	KP_read
+	movff	read_keypad, PORTD, A
 	goto 	read
+	
+	
+	
+	
+	
 	
 	
 delay:

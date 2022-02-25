@@ -1,28 +1,39 @@
 
     #include <xc.inc>
 
-global  KP_Setup, KP_read_row, KP_read_col,read_row, read_col
+global  KP_Setup, KP_read_row, KP_read, read_keypad
 
 psect	udata_acs   ; named variables in access ram
+read_keypad:	ds 1	;reserve one byte for total keypad value
 read_row:	ds 1	; reserve one byte for row values
 read_col:	ds 1	; reserve one byte for row values
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1   ; reserve 1 byte for ms counter
 LCD_tmp:	ds 1   ; reserve 1 byte for temporary use
-LCD_counter:	ds 1   ; reserve 1 byte for counting through nessage
+LCD_counter:	ds 1   ; reserve 1 byte for counting through message
+kp_counter:	ds 1	; reserve 1 byte to count through rows and columns
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
 	
 
-psect	data    
-	; ******* myTable, data in programme memory, and its length *****
-KP_numbers:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
-					; message, plus carriage return
-	myTable_l   EQU	13	; length of data
-	align	2
+psect	data
+
+col_1:
+	db	'1','4','7','A'
+	align 2
+col_2:
+	db	'2','5','8','0'
+	align 2
+col_3:
+	db	'3','6','9','B'
+	align 2
+col_4:
+	db	'F','E','D','C'
+	align 2
+	
+    col_length EQU 4
 
 psect	keypad_code,class=CODE
     
@@ -34,21 +45,23 @@ KP_Setup:
 	movwf	TRISE, A	;configures PORTE 4-7 as outputs and PORTE 0-3 as inputs
 	return
 	
-KP_read_col:	    ;Already switched row and col (Mel 24.02.22)
+KP_read:
+KP_read_col:	    ;read column value
 	movlw	0x0f		; 00001111
 	movwf	TRISE, A	;configures PORTE 4-7 as outputs and PORTE 0-3 as inputs
 ;	movlw	0x0f
 	call	LCD_delay
 	movff	PORTE, read_col , A  
-	return
-	
-KP_read_row:
+KP_read_row:	    ;read row value
 	movlw	0xf0		; 11110000
 	movwf	TRISE, A	;configures PORTE 4-7 as inputs and PORTE 0-3 as outputs
 	call	LCD_delay
 	movff	PORTE, read_row , A ;
 	
-	return
+	movff	read_row, WREG
+	addwf	read_col, W, A    ;add col and row value, store in read_keypad
+	movwf	read_keypad, A
+	return	    ;return to where KP_read was called
 	
 ; ** a few delay routines below here as LCD timing can be quite critical ****
 LCD_delay_ms:		    ; delay given in ms in W
@@ -85,6 +98,8 @@ KP_decode:
     
     ;;make at least 2 keys work
     
+
+    
     
 ;	movlw	0x01 ; (binary for button 1~)
 ;	cpfseq PORTD, A
@@ -92,7 +107,10 @@ KP_decode:
 ;	movlw binary for button 2
 ;	cpfseq 2
 ;	call print 2
-	...
+;	...
+;	wreg 
+;	1011 1101
+;	btfsc
     end
 
 
