@@ -1,7 +1,7 @@
 
     #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message
+global  LCD_Setup, LCD_Write_Message, LCD_clear
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -48,13 +48,14 @@ LCD_Setup:
 	return
 
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
+	movlw	1	; output message to LCD
 	movwf   LCD_counter, A
 LCD_Loop_message:
-	movf    POSTINC2, W, A
+	movff	TABLAT , WREG, A
 	call    LCD_Send_Byte_D
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
-	return
+	return	
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A
@@ -132,7 +133,12 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	subwfb 	LCD_cnt_h, F, A	; no carry when 0x00 -> 0xff
 	bc 	lcdlp1		; carry, then loop again
 	return			; carry reset so return
-
+LCD_clear:
+	movlw	00000001B	; display clear
+	call	LCD_Send_Byte_I
+	movlw	2		; wait 2ms
+	call	LCD_delay_ms
+	return
 
     end
 
