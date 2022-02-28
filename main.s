@@ -61,11 +61,25 @@ measure_loop:
 	call	LCD_Write_Hex
 	movf	ADRESL, W, A
 	call	LCD_Write_Hex
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
+	call	delay
 	goto	measure_loop		; goto current line in code
 	
 	; a delay subroutine if you need one, times around loop in delay_count
-delay:	decfsz	delay_count, A	; decrement until zero
-	bra	delay
+delay:	
+	movlw   0xff
+	movwf   delay_count, A
+delay_loop:
+	decfsz	delay_count, A	; decrement until zero
+	bra	delay_loop
 	return
 
 	end	rst
