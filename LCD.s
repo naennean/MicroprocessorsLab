@@ -1,4 +1,5 @@
-#include <xc.inc>
+
+    #include <xc.inc>
 
 global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
 
