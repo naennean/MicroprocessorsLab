@@ -76,15 +76,7 @@ measure_loop:
 	movf	ADRESL, W, A
 	call	LCD_Write_Hex
 	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
-	call	delay
+
 	goto	measure_loop		; goto current line in code
 
 	call	LCD_shift
