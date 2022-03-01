@@ -4,7 +4,7 @@ extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift, LCD_delay ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, multiply		   ; external ADC subroutines
 extrn	RES0, RES1, RES2, RES3, ARG1H, ARG2H, ARG1L, ARG2L, LCD_Write_Hex_Dig
-extrn	multiply_uneven, L1, M1, H1, ARG2
+extrn	multiply_uneven, L1, M1, H1, ARG2, LCD_Send_Byte_D
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -163,9 +163,13 @@ volt_conv:
 	call	multiply	    ; result will be in RES0-3
 	movf	RES3, W, A	    ;print highest non-zero nibble
 	call	LCD_Write_Hex_Dig
+	movlw	0x2E
+	call	LCD_Send_Byte_D
 	call	volt_decimals
 	call	volt_decimals
 	call	volt_decimals
+	movlw	0x56
+	call	LCD_Send_Byte_D
 	return
 volt_decimals:
 	movff	RES2, H1, A
