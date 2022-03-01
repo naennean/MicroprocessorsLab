@@ -1,14 +1,17 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift ; external LCD subroutines
-extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift, LCD_delay ; external LCD subroutines
+extrn	ADC_Setup, ADC_Read, multiply		   ; external ADC subroutines
+extrn	RES0, RES1, RES2, RES3, ARG1H, ARG2H, ARG1L, ARG2L
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
 delaydelay_count:ds 1
 delayCubed_count:ds 1
+
+
     
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -60,33 +63,52 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	decfsz	counter, A		; count down to zero
 	bra	loop		; keep going until finished
 		
-	movlw	myTable_l	; output message to UART
-	lfsr	2, myArray
-	call	UART_Transmit_Message
+;	movlw	myTable_l	; output message to UART
+;	lfsr	2, myArray
+;	call	UART_Transmit_Message
 
 	movlw	myTable_l-1	; output message to LCD
 				; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	call	delay
+	call	LCD_clear
+	
+
 	
 measure_loop:
 	call	ADC_Read
-	movf	ADRESH, W, A
+ 	movf	ADRESH, W, A
 	call	LCD_Write_Hex
-	movf	ADRESL, W, A
+ 	movf	ADRESL, W, A
+ 	call	LCD_Write_Hex
+	call	LCD_shift
+	;;; testing 8x8 multiplication
+	call	volt_conv
+	movf	RES3, W, A
 	call	LCD_Write_Hex
-	call	delay
-
+	movf	RES2, W, A
+	call	LCD_Write_Hex
+	movf	RES1, W, A
+	call	LCD_Write_Hex
+	movf	RES0, W, A
+	call	LCD_Write_Hex
+	;;;
+	call	LCD_delay
+	call	LCD_delay
+	call	LCD_delay
+	call	LCD_delay
+	call	LCD_clear
 	goto	measure_loop		; goto current line in code
 
-	call	LCD_shift
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
-	call	LCD_Write_Message
+;	call	LCD_shift
+;	movlw	myTable_l	; output message to LCD
+;	addlw	0xff		; don't send the final carriage return to LCD
+;	lfsr	2, myArray
+;	call	LCD_Write_Message
 	
-	call	delay
-	call	LCD_clear
+;	call	delay
+;	call	LCD_clear
 	goto	$		; goto current line in code
 
 Secretstart: 	lfsr	0, mySecretArray	; Load FSR0 with address in RAM	
@@ -126,27 +148,35 @@ Secretloop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 ;delay:	decfsz	delay_count, A	; decrement until zero
 ;	bra	delay
 ;	return
-	
+volt_conv:
+	movff	ADRESH, ARG1H, A    ; high byte of ADC result
+	movff	ADRESL, ARG1L, A    ; low byte of ADC result
+	movff	0x41, ARG2H, A	    ; high byte of conversion number
+	movff	0x8A, ARG2L, A	    ; low byte of conversion number
+	call	multiply	    ; result will be in RES0-3
+	return
+
+
 delay:
 	movlw	0xff
-	movwf	delay_count	    ;store 0xff in 0x02 for delay
+	movwf	delay_count,A	    ;store 0xff in 0x02 for delay
 delayloop:
 	movlw	0xff
-	movwf	delaydelay_count	    ;store 0xff in 0x02 for delay	
+	movwf	delaydelay_count,A		    ;store 0xff in 0x02 for delay	
 	call	delaydelay
-	decfsz  delay_count		;decrement from 0x20 down to 0
+	decfsz  delay_count,A			;decrement from 0x20 down to 0
 	bra	delayloop		;when line above reaches zero, will skip this line
 	return
 	
 delaydelay:
 	movlw	0xff
-	movwf	delayCubed_count	    ;store 0xff in 0x02 for delay	
+	movwf	delayCubed_count,A		    ;store 0xff in 0x02 for delay	
 	call	delayCubed
-	decfsz	delaydelay_count
+	decfsz	delaydelay_count,A	
 	bra	delaydelay
 	return
 delayCubed:
-	decfsz	delayCubed_count
+	decfsz	delayCubed_count,A	
 	bra	delayCubed
 	return
 	end	rst
