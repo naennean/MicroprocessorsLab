@@ -1,7 +1,7 @@
 
     #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift, LCD_delay
+global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift, LCD_delay, LCD_Write_Hex_Dig
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -164,6 +164,21 @@ LCD_shift:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
+	return
+	
+LCD_Write_Hex_Dig:			; Writes byte stored in W as hex
+	movwf	LCD_hex_tmp, A
+	swapf	LCD_hex_tmp, W, A	; high nibble first
+	movf	LCD_hex_tmp, W, A	; then low nibble
+LCD_Hex_Nib_d:			; writes low nibble as hex character
+	andlw	0x0F
+	movwf	LCD_tmp, A
+	movlw	0x0A
+	cpfslt	LCD_tmp, A
+	addlw	0x07		; number is greater than 9 
+	addlw	0x26
+	addwf	LCD_tmp, W, A
+	call	LCD_Send_Byte_D ; write out ascii
 	return
     end
 
