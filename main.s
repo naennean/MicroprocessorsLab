@@ -4,6 +4,7 @@ extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift, LCD_delay ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, multiply		   ; external ADC subroutines
 extrn	RES0, RES1, RES2, RES3, ARG1H, ARG2H, ARG1L, ARG2L, LCD_Write_Hex_Dig
+extrn	multiply_uneven, L1, M1, H1, ARG2
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -85,14 +86,14 @@ measure_loop:
 	call	LCD_shift
 	;;; testing 8x8 multiplication
 	call	volt_conv
-	movf	RES3, W, A
-	call	LCD_Write_Hex_Dig
-	movf	RES2, W, A
-	call	LCD_Write_Hex_Dig
-	movf	RES1, W, A
-	call	LCD_Write_Hex_Dig
-	movf	RES0, W, A
-	call	LCD_Write_Hex_Dig
+;	movf	RES3, W, A
+;	call	LCD_Write_Hex_Dig
+;	movf	RES2, W, A
+;	call	LCD_Write_Hex_Dig
+;	movf	RES1, W, A
+;	call	LCD_Write_Hex_Dig
+;	movf	RES0, W, A
+;	call	LCD_Write_Hex_Dig
 	;;;
 	call	LCD_delay
 	call	LCD_delay
@@ -149,17 +150,32 @@ Secretloop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 ;	bra	delay
 ;	return
 volt_conv:
- ;	movff	ADRESH, ARG1H, A    ; high byte of ADC result
- ;	movff	ADRESL, ARG1L, A    ; low byte of ADC result
-	movlw	0x04
-	movwf	ARG1H, A
-	movlw	0xD2
-	movwf	ARG1L, A
+	movff	ADRESH, ARG1H, A    ; high byte of ADC result
+	movff	ADRESL, ARG1L, A    ; low byte of ADC result
+;	movlw	0x04
+;	movwf	ARG1H, A
+;	movlw	0xD2
+;	movwf	ARG1L, A
 	movlw	0x41
 	movwf	ARG2H, A	    ; high byte of conversion number
 	movlw	0x8A
 	movwf	ARG2L, A	    ; low byte of conversion number
 	call	multiply	    ; result will be in RES0-3
+	movf	RES3, W, A	    ;print highest non-zero nibble
+	call	LCD_Write_Hex_Dig
+	call	volt_decimals
+	call	volt_decimals
+	call	volt_decimals
+	return
+volt_decimals:
+	movff	RES2, H1, A
+	movff	RES1, M1, A
+	movff	RES0, L1, A
+	movlw	0x0A
+	movwf	ARG2, A
+	call	multiply_uneven
+	movf	RES3, W, A	    ;print highest non-zero nibble
+	call	LCD_Write_Hex_Dig
 	return
 
 
